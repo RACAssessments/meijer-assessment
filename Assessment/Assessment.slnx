@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="MeijerProducts/MeijerProducts.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+</Solution>
