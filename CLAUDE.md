@@ -9,7 +9,11 @@ The `Assessment/MeijerProducts` project is currently the **unmodified `dotnet ne
 the default counter-button `MainPage` and no app-specific code yet. There is no backend API project in the
 repo yet either. The task is to build both from this starting point.
 
-Not a git repository (no `.git` directory) as of this writing.
+### Git Repository
+https://github.com/RACAssessments/meijer-assessment.git
+
+### Project
+https://github.com/users/blanthor/projects/7
 
 ## The assignment
 
@@ -51,9 +55,10 @@ dotnet build MeijerProducts/MeijerProducts.csproj -f net10.0-android
 dotnet build MeijerProducts/MeijerProducts.csproj -t:Run -f net10.0-android
 ```
 
-- Multi-targets: `net10.0-android`, `net10.0-ios`, `net10.0-maccatalyst` (non-Linux hosts only), and
-  `net10.0-windows10.0.19041.0` (Windows hosts only) — see `MeijerProducts.csproj`.
-- iOS/MacCatalyst builds require a Mac (or a paired Mac) and aren't available from this Windows environment.
+- Supported platforms only: `net10.0-android`, `net10.0-ios` (non-Linux hosts only), and
+  `net10.0-windows10.0.19041.0` (Windows hosts only) — see `MeijerProducts.csproj`. MacCatalyst is not a
+  supported target.
+- iOS builds require a Mac (or a paired Mac) and aren't available from this Windows environment.
 - There is no test project yet. If unit tests are added (ViewModels/services), prefer a standard
   `dotnet test`-compatible project (xUnit/NUnit) referencing the MAUI project's non-UI classes, since
   running MAUI `ContentPage`/XAML code outside a platform head isn't practical to test directly.
@@ -82,3 +87,11 @@ reinventing conventions:
   (`Microsoft.Maui.Devices.Sensors.Geolocation`, `Microsoft.Maui.ApplicationModel.DataTransfer.Share`)
   rather than platform-specific code, and remember to declare the relevant platform permissions
   (location) under `Platforms/*` (e.g. `Platforms/Android/AndroidManifest.xml`, iOS `Info.plist`).
+
+## Decision log
+
+`docs/DECISIONS.md` tracks notable technical decisions (context, decision, why) for this
+assessment. Before adding/removing/upgrading a NuGet package, adding or changing a device
+capability/permission (location, camera, etc.), or altering an architectural layer (new
+project, new service abstraction, changed navigation pattern, etc.), ask the user whether it
+warrants a new entry — don't add the entry unprompted, and don't skip asking.

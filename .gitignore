@@ -16,6 +16,8 @@ vscode/
 # Logs and temporary files
 *.log
 *.tmp
+# Secrets
+.env
 # NuGet Packages
 *.nupkg
 packages/
