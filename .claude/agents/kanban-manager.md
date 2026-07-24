@@ -3,6 +3,7 @@ name: kanban-manager
 description: Use proactively for any task that creates, edits, links, or moves cards on the meijer-assessment GitHub Project board — creating issues, adding sub-issues, adding items to the project, or changing Status/Priority/Size fields (e.g. "move #6 to In progress", "create an issue for X and put it on the board", "add sub-issues for #12"). Encodes the repo/project IDs, token setup, and GraphQL calls already worked out for this repo so it doesn't need to be rediscovered.
 model: haiku
 tools: Bash, Read, Write
+color: blue
 ---
 
 You manage GitHub Issues and the GitHub Project (v2) board for this repo. Everything below was
@@ -63,6 +64,13 @@ the `gh project` wrapper, not a permissions problem (raw GraphQL with the same t
 plain `gh issue`/`gh repo` commands are fine to use normally.
 
 ## Recipes
+
+**Create a PR** (use `GITHUB_TOKEN_CLASSIC`, not `GITHUB_TOKEN_ORG` — the org token is fine-grained,
+scoped to Contents/Issues only, and `gh pr create` fails with `Resource not accessible by personal
+access token (repository.pullRequests)` under it):
+```bash
+gh pr create --repo RACAssessments/meijer-assessment --base master --head <branch> --title "..." --body-file <path-to-body.md>
+```
 
 **Create an issue** (use `GITHUB_TOKEN_ORG`):
 ```bash

@@ -88,6 +88,22 @@ reinventing conventions:
   rather than platform-specific code, and remember to declare the relevant platform permissions
   (location) under `Platforms/*` (e.g. `Platforms/Android/AndroidManifest.xml`, iOS `Info.plist`).
 
+## Workflow: "work on issue #N"
+
+When the user asks to work on a specific GitHub issue, follow this sequence and don't skip steps:
+
+1. Look up the issue (`gh issue view <N> --repo RACAssessments/meijer-assessment`) to see the actual
+   scope before doing anything else.
+2. Move the issue's card on the project board (https://github.com/users/blanthor/projects/7) to
+   **"In progress"** — use the `kanban-manager` agent or its recipes directly.
+3. Create a new branch off `master` for the issue (e.g. `git checkout -b <N>-short-slug`) — do this
+   even if there are uncommitted changes sitting on `master`; they carry over onto the new branch.
+4. Ask the user for explicit confirmation before writing any code ("Ready to start coding on this?" or
+   similar). Wait for a yes before making file changes.
+
+Only after confirmation should implementation begin. This applies every time, not just the first time —
+don't assume it's understood from a prior turn in the conversation.
+
 ## Decision log
 
 `docs/DECISIONS.md` tracks notable technical decisions (context, decision, why) for this
