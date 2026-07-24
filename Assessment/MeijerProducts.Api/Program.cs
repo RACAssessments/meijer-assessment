@@ -50,6 +50,7 @@ if (!EF.IsDesignTime)
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ProductDbContext>();
     db.Database.Migrate();
+    DbInitializer.Seed(db);
 }
 
 app.Run();
