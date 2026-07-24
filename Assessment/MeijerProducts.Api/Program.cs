@@ -1,4 +1,5 @@
 using MeijerProducts.Api.Data;
+using MeijerProducts.Api.Endpoints;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,5 +53,7 @@ if (!EF.IsDesignTime)
     db.Database.Migrate();
     DbInitializer.Seed(db);
 }
+
+app.MapProductEndpoints();
 
 app.Run();
