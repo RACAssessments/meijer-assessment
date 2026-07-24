@@ -2,4 +2,5 @@
   <Project Path="MeijerProducts/MeijerProducts.csproj">
     <Deploy Solution="Debug|*" />
   </Project>
+  <Project Path="MeijerProducts.Api/MeijerProducts.Api.csproj" />
 </Solution>
