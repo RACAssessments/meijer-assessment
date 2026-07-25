@@ -62,6 +62,27 @@ one-off scripting for the assignment.
 
 ---
 
+## 2026-07-24 — Accept SQLitePCLRaw.lib.e_sqlite3 2.1.11 high-severity advisory (GHSA-2m69-gcr7-jv3q)
+
+**Context:** Adding `Microsoft.EntityFrameworkCore.Sqlite` 10.0.10 (for issue #7's persistence
+layer) transitively pulls `SQLitePCLRaw.lib.e_sqlite3` 2.1.11, which NuGet flags with a high-severity
+advisory — a SQLite memory-corruption bug (aggregate term count vs. column count), fixed upstream in
+SQLite 3.50.2+. `SQLitePCLRaw` 2.1.12 is available on NuGet and no longer carries the deprecation
+warning, so pinning it explicitly (overriding the transitive version) was a live option.
+
+**Decision:** Leave the transitive `SQLitePCLRaw` version as EF Core 10.0.10 resolves it by default
+(currently 2.1.11) rather than adding an explicit override `PackageReference`. Documented here as an
+accepted risk instead.
+
+**Why:** This is a local take-home assessment API — SQLite runs entirely server-side behind the two
+read-only endpoints, there's no untrusted/attacker-controlled SQL reaching aggregate queries, and the
+exploit path described in the advisory isn't reachable through this app's query shape. Forcing a
+transitive-version override adds a maintenance seam (has to be re-verified against every future EF
+Core upgrade) for a risk that isn't actually exercised here. Revisit if EF Core ships a release that
+bundles the fixed SQLitePCLRaw by default, or if this API ever accepts untrusted query input.
+
+---
+
 ## Template for new entries
 
 ```markdown

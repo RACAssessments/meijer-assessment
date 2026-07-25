@@ -21,3 +21,9 @@ vscode/
 # NuGet Packages
 *.nupkg
 packages/
+
+# SQLite databases (EF Core local dev / Docker volume)
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
