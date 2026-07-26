@@ -6,6 +6,32 @@ and why — so the reasoning survives even if the code around it changes.
 
 ---
 
+## 2026-07-26 — Containerize the API with a multi-stage Dockerfile + Compose
+
+**Context:** Issue #12 asks for the API to be runnable as a container, on the current .NET
+container conventions (non-privileged port, no reliance on a locally-installed SDK), with its
+SQLite data surviving container recreates, and Swagger still reachable for manual verification.
+
+**Decision:** Add `Assessment/MeijerProducts.Api/Dockerfile` — a multi-stage build (`sdk:10.0` to
+restore/publish, `aspnet:10.0` to run), binding Kestrel to `0.0.0.0:8080` via `ASPNETCORE_URLS`
+and `EXPOSE 8080` (baked into the image, since that's invariant across environments). Add
+`Assessment/MeijerProducts.Api/.dockerignore` to keep `bin/`, `obj/`, and local `.db*` files out of
+the build context. Add `Assessment/docker-compose.yml` with a single `api` service that builds the
+image, maps port 8080, forces `ASPNETCORE_ENVIRONMENT=Development` (so Swagger stays enabled
+despite the base image's `Production` default), and points `ConnectionStrings__Default` at
+`/app/data/products.db` on a named volume — deployment-specific settings live in Compose rather
+than the Dockerfile, so the image itself stays environment-agnostic.
+
+**Why:** Port 8080 avoids requiring root/privileged-port binding inside the container and matches
+the current .NET container image convention. Forcing `Development` (rather than leaving the base
+image's `Production` default) keeps Swagger reachable for grading/manual verification without
+adding conditional logic to `Program.cs`. A named volume at `/app/data`, separate from the app's
+own files, means `docker compose restart`/recreate doesn't wipe the seeded SQLite database — the
+app's existing `db.Database.Migrate()` + seed-on-startup logic (from the persistence sub-issue)
+already handles first-run initialization with no extra Docker-side migration step needed.
+
+---
+
 ## 2026-07-22 — Drop MacCatalyst as a build target
 
 **Context:** The unmodified `dotnet new maui` template multi-targets `net10.0-android`,
