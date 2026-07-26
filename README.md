@@ -11,11 +11,10 @@ and the [project board](https://github.com/users/blanthor/projects/7).
 Assessment/
   Assessment.slnx           # solution file — build/restore from here
   MeijerProducts/            # .NET MAUI app (Android, iOS, Windows)
+  MeijerProducts.Api/        # ASP.NET Core Web API (products list/detail, EF Core + SQLite)
+  docker-compose.yml         # containerized API
 docs/                        # assessment spec, sample API JSON, architecture reference, decision log
 ```
-
-A backend API project (`Assessment/MeijerProducts.Api`) is planned but not yet created — see
-[issue #2](https://github.com/RACAssessments/meijer-assessment/issues/2) and its sub-issues.
 
 ## Building
 
@@ -35,6 +34,20 @@ dotnet build MeijerProducts/MeijerProducts.csproj -t:Run -f net10.0-windows10.0.
 
 Android requires the Android SDK/emulator; iOS requires a Mac. See `CLAUDE.md` for the full command
 reference and architecture conventions.
+
+## Running the API in Docker
+
+From `Assessment/`:
+
+```powershell
+docker compose up --build
+```
+
+- Products: http://localhost:8080/products
+- Swagger: http://localhost:8080/swagger
+
+Seeded SQLite data lives on a named volume, so it survives `docker compose restart`. Stop with
+`docker compose down` (add `-v` to also wipe the volume and reset seeded data).
 
 ## Running the app (agents / automation)
 
