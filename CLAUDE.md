@@ -5,9 +5,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Repository state
 
 This is a take-home coding assessment for a Meijer interview (see `docs/STME Take Home Assessment.md`).
-The `Assessment/MeijerProducts` project is currently the **unmodified `dotnet new maui` template** — it has
-the default counter-button `MainPage` and no app-specific code yet. There is no backend API project in the
-repo yet either. The task is to build both from this starting point.
+Both halves of the assignment are built out:
+
+- `Assessment/MeijerProducts` — the MAUI app: product list and detail screens (MVVM +
+  CommunityToolkit.Mvvm, constructor DI, Shell navigation) with the location-aware "Add to list" share
+  action.
+- `Assessment/MeijerProducts.Api` — the ASP.NET Core minimal API: `GET /products` and
+  `GET /products/{id}` over EF Core/SQLite, with a checked-in migration and an idempotent 30-product
+  seeder that runs at startup. Containerized via `Assessment/docker-compose.yml`.
+- `Assessment/MeijerProducts.Tests` and `Assessment/MeijerProducts.Api.Tests` — xUnit suites for each side.
+
+Remaining work is tracked under issue #5 (testing, docs, and submission readiness). `README.md` is the
+human-facing build/run/test guide; keep it in sync when behavior changes.
 
 ### Git Repository
 https://github.com/RACAssessments/meijer-assessment.git
@@ -22,9 +31,7 @@ and `docs/products (1).json`). Summary:
 
 1. **Backend**: A .NET API exposing two endpoints — a products list (`id`, `imageUrl`, `summary`, `title`)
    and a product detail (`id`, `imageUrl`, `summary`, `title`, `description`, `price`) — backed by a
-   persistence layer of choice, built with API best practices. No backend project exists yet; it needs to
-   be created (e.g. as a sibling ASP.NET Core Web API project alongside `MeijerProducts` in `Assessment/`,
-   added to `Assessment.slnx`).
+   persistence layer of choice, built with API best practices.
 2. **MAUI app** (`Assessment/MeijerProducts`):
    - A product list screen (image thumbnail, title, summary) where tapping an item navigates to a detail
      screen (full image, title, description, price).
@@ -53,40 +60,65 @@ dotnet build MeijerProducts/MeijerProducts.csproj -t:Run -f net10.0-windows10.0.
 # Android (requires Android SDK/emulator configured)
 dotnet build MeijerProducts/MeijerProducts.csproj -f net10.0-android
 dotnet build MeijerProducts/MeijerProducts.csproj -t:Run -f net10.0-android
+
+# API
+dotnet build MeijerProducts.Api/MeijerProducts.Api.csproj
+cd MeijerProducts.Api; dotnet run --launch-profile http   # http://localhost:5217
+
+# Tests — run per-project, never solution-wide (see below)
+dotnet test MeijerProducts.Tests/MeijerProducts.Tests.csproj
+dotnet test MeijerProducts.Api.Tests/MeijerProducts.Api.Tests.csproj
 ```
 
 - Supported platforms only: `net10.0-android`, `net10.0-ios` (non-Linux hosts only), and
   `net10.0-windows10.0.19041.0` (Windows hosts only) — see `MeijerProducts.csproj`. MacCatalyst is not a
   supported target.
 - iOS builds require a Mac (or a paired Mac) and aren't available from this Windows environment.
-- There is no test project yet. If unit tests are added (ViewModels/services), prefer a standard
-  `dotnet test`-compatible project (xUnit/NUnit) referencing the MAUI project's non-UI classes, since
-  running MAUI `ContentPage`/XAML code outside a platform head isn't practical to test directly.
+- **Never run `dotnet build`/`dotnet test` at the solution level** — it pulls the MAUI head into the build
+  graph and builds every TFM, which is slow and fails outright without the Android workload. Always pass a
+  specific project (and `-f` for the MAUI head).
+- `MeijerProducts.Tests` targets `net10.0-windows10.0.19041.0` (exact match against one of the head's
+  TFMs, with `ExcludeAssets` on the project reference to strip Resizetizer's build targets), so it runs on
+  Windows only. `MeijerProducts.Api.Tests` is plain `net10.0` and self-hosts the API via
+  `WebApplicationFactory` against a throwaway SQLite file — no running server needed.
+- `LocationService`/`ShareService` are deliberately untested (they only delegate to MAUI Essentials
+  statics); their behavior is verified by launching the app, not by unit tests.
+- A build can fail with `MSB3021`/file-lock errors if a previously launched `MeijerProducts.exe` is still
+  running — stop it via the `run-meijerproducts` skill's `driver.ps1 stop`.
 - No linter/formatter is configured beyond the default .NET SDK analyzers.
 
 ## Architecture guidance
 
-There's no established in-repo architecture yet beyond the MAUI template's `App` → `AppShell` → `MainPage`
-shell navigation. `docs/Enterprise-Application-Patterns-Using-.NET-MAUI.md` (Microsoft's MAUI enterprise
-patterns eBook, bundled for reference) is the intended architectural guide — follow it rather than
-reinventing conventions:
+The conventions below are established in the codebase — match them rather than reinventing.
+`docs/Enterprise-Application-Patterns-Using-.NET-MAUI.md` (Microsoft's MAUI enterprise patterns eBook,
+bundled for reference) is the architectural guide they came from; consult it for anything not covered
+here:
 
 - **MVVM**: Views (XAML `ContentPage`s) bind to ViewModels; ViewModels expose bindable properties and
   `ICommand`s and hold no view references; Models are plain data/DTO classes. Avoid logic in code-behind.
 - **Dependency injection**: register services/ViewModels/pages in `MauiProgram.cs` via
   `builder.Services`, resolve through constructor injection (standard `Microsoft.Extensions.DependencyInjection`,
   already wired into `MauiProgram`).
-- **Services layer**: put HTTP client / API access behind an interface (e.g. `IProductService`) injected
-  into ViewModels, not called directly from views or code-behind.
-- **Suggested folder layout** inside `MeijerProducts/` (per the guide's "eShop project" structure — add
-  folders as needed, don't pre-create empty ones): `Models/`, `ViewModels/`, `Views/`, `Services/`,
-  `Converters/`, `Helpers/`.
-- **Navigation**: use Shell navigation (`AppShell.xaml` route registration + `Shell.Current.GoToAsync`)
-  for list → detail, passing the product id as a route parameter rather than the whole object.
+- **Services layer**: everything platform- or IO-bound sits behind an interface injected into ViewModels,
+  never called statically from a ViewModel or code-behind. Existing: `IProductService` (HTTP),
+  `ILocationService` (geolocation + reverse geocoding), `IShareService` (share sheet),
+  `INavigationService` (Shell navigation). Follow this pattern for anything new — it's what keeps the
+  ViewModels testable without a device.
+- **Folder layout** inside `MeijerProducts/` (per the guide's "eShop project" structure): `Models/`,
+  `ViewModels/`, `Views/`, `Services/`, `Converters/`, `Helpers/`.
+- **Navigation**: Shell navigation with routes registered in `AppShell.xaml` and route names in
+  `Helpers/Routes.cs`. ViewModels call `INavigationService.GoToAsync(...)`, **not** `Shell.Current`
+  directly. List → detail passes the product id as a route query parameter (`productdetail?id=7`),
+  received via `IQueryAttributable.ApplyQueryAttributes` — never the whole object.
 - For the location → city lookup and the share action, use MAUI's cross-platform abstractions
   (`Microsoft.Maui.Devices.Sensors.Geolocation`, `Microsoft.Maui.ApplicationModel.DataTransfer.Share`)
-  rather than platform-specific code, and remember to declare the relevant platform permissions
-  (location) under `Platforms/*` (e.g. `Platforms/Android/AndroidManifest.xml`, iOS `Info.plist`).
+  rather than platform-specific code — wrapped behind `ILocationService`/`IShareService` as above.
+  Platform permissions (location) are already declared under `Platforms/*`
+  (`Platforms/Android/AndroidManifest.xml`, iOS `Info.plist`, Windows `Package.appxmanifest`).
+- **Backend**: minimal APIs grouped in `Endpoints/ProductEndpoints.cs` (no controllers), separate list
+  and detail DTOs in `Contracts/` — the list DTO deliberately omits `description`/`price` per the
+  assessment's contract — EF Core over SQLite in `Data/`, with `Migrate()` + an idempotent seeder at
+  startup.
 
 ## Workflow: "work on issue #N"
 

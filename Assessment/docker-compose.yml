@@ -2,7 +2,11 @@ services:
   api:
     build: ./MeijerProducts.Api
     ports:
-      - "8080:8080"
+      # Published on 5217 to match the base address the MAUI app hardcodes in MauiProgram.cs,
+      # which is also the API's `dotnet run` port - so both ways of running the API serve the
+      # same address and the app needs no rebuild to switch between them. The container still
+      # listens on 8080 internally (see the Dockerfile's ASPNETCORE_URLS).
+      - "5217:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Default: Data Source=/app/data/products.db

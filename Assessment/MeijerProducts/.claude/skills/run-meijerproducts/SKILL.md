@@ -48,13 +48,14 @@ From the repo root:
 ```powershell
 $driver = "Assessment\MeijerProducts\.claude\skills\run-meijerproducts\driver.ps1"
 
-powershell -File $driver launch                          # builds + starts the app, waits for the window
-powershell -File $driver screenshot -Out C:\tmp\before.png
-powershell -File $driver click -Name "Click me"           # invoke a button by its current text
-powershell -File $driver click                            # or omit -Name to click the (sole) app button
-powershell -File $driver get-text                         # prints the button's current text
-powershell -File $driver screenshot -Out C:\tmp\after.png
-powershell -File $driver stop                             # kills the process, clears tracked state
+powershell -File $driver launch                            # builds + starts the app, waits for the window
+powershell -File $driver screenshot -Out C:\tmp\list.png
+# ...click a product row by hand to reach the detail screen - see Gotchas...
+powershell -File $driver click -Name "Add to list"          # invoke a button by its text
+powershell -File $driver click                              # or omit -Name to click the (sole) app button
+powershell -File $driver get-text -Name "Add to list"       # prints the button's current text
+powershell -File $driver screenshot -Out C:\tmp\share.png
+powershell -File $driver stop                               # kills the process, clears tracked state
 ```
 
 Each invocation is a separate `powershell.exe` process, so `launch` persists the app's PID/window
@@ -82,7 +83,19 @@ no return handle to script clicks/screenshots against, use the driver instead.
 
 ## Test
 
-No test project exists yet in this repo (see `CLAUDE.md`) — nothing to run here currently.
+Two xUnit projects, both run from `Assessment/`:
+
+```powershell
+dotnet test MeijerProducts.Tests/MeijerProducts.Tests.csproj          # MAUI ViewModels/services/converters
+dotnet test MeijerProducts.Api.Tests/MeijerProducts.Api.Tests.csproj  # API endpoints, mapping, seeding
+```
+
+Run them per-project, not solution-wide — a solution-level `dotnet test` drags the MAUI head into
+the build graph and builds all its target frameworks, which fails without the Android workload.
+
+Neither suite needs the app or the API running. Unit tests are not a substitute for the driver
+here: `LocationService`/`ShareService` are deliberately untested (they only delegate to MAUI
+Essentials statics), so the share flow is verified by launching the app and driving it.
 
 ---
 
@@ -102,10 +115,15 @@ No test project exists yet in this repo (see `CLAUDE.md`) — nothing to run her
   confusing cascading "Unexpected token" errors far below the actual bad character, if the file's
   encoding doesn't match what `powershell.exe` assumes when reading it. Keep string literals in
   this driver ASCII-only.
-- **A `Button`'s accessible Name *is* its text**, and this app's counter button's text changes on
-  every click ("Click me" → "Clicked 1 time" → "Clicked 2 times" → ...). Matching by `-Name` only
-  works for the *first* click unless you track the current text yourself — omit `-Name` to always
-  hit the one app button regardless of its current label.
+- **A `Button`'s accessible Name *is* its text** — that's what `-Name` matches against. The only
+  real `Button` in this app is `"Add to list"` on the detail screen, and its label is static, so
+  `-Name "Add to list"` is stable. Omitting `-Name` also works while it stays the sole button.
+- **`click` cannot navigate from the product list to the detail screen.** List rows are a
+  `TapGestureRecognizer` on a `Grid` inside the `CollectionView.ItemTemplate` (see
+  `Views/ProductListPage.xaml`), not `Button`s — they expose no `InvokePattern`, so `Find-AppButton`
+  will never match them. Click a row by hand, then resume driving. Scripting it would need a new
+  driver command that resolves an element's `GetClickablePoint()` and synthesizes a real mouse
+  click; that hasn't been built.
 
 ## Troubleshooting
 

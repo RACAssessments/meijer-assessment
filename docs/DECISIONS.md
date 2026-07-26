@@ -6,6 +6,33 @@ and why — so the reasoning survives even if the code around it changes.
 
 ---
 
+## 2026-07-26 — Publish the Compose API on 5217 to match the MAUI app's base address
+
+**Context:** Issue #24 (sub-issue of #5) surfaced a mismatch that made the containerized API
+unusable from the app: `MeijerProducts/MauiProgram.cs` hardcodes `http://localhost:5217/`
+(`http://10.0.2.2:5217/` on Android), which is the API's `dotnet run` port from `launchSettings.json`,
+while `docker-compose.yml` published the container on 8080. Running `docker compose up` and then
+launching the app produced the list screen's connection-error state with nothing to indicate why —
+a plausible first experience for a reviewer following the README's Docker section.
+
+**Decision:** Changed the Compose port mapping from `"8080:8080"` to `"5217:8080"`. The container
+still listens on 8080 internally — the Dockerfile's `ASPNETCORE_URLS`/`EXPOSE` are untouched — so
+only the host-side published port moves. `docker compose up` and `dotnet run` now serve the same
+address, and the app works against either without a rebuild. README's Docker URLs updated to 5217,
+with a note that the port and `MauiProgram.cs` are two ends of one coupling.
+
+**Why:** The alternatives were worse for a take-home. Pointing the app at 8080 instead would have
+broken the plain `dotnet run` workflow, which is the faster inner loop and the one the Quick start
+section leads with. Making the base address configurable (a `MauiAsset` settings JSON or an MSBuild
+constant) is the right answer for a real app but is an architectural change well out of proportion
+to a one-line YAML fix here, and it would add a configuration layer the assessment never asked for.
+Documenting the mismatch without fixing it would leave a working-by-accident-only setup in the repo.
+Keeping the container's internal port at 8080 preserves the non-privileged-port rationale recorded
+in the 2026-07-26 containerization entry; only the host mapping is environment-specific, and
+Compose is the right place for that.
+
+---
+
 ## 2026-07-26 — New `MeijerProducts.Api.Tests` project, `Mvc.Testing` against a per-run temp SQLite file
 
 **Context:** Issue #23 (sub-issue of #5) asks for endpoint/integration coverage of
