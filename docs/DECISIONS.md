@@ -6,6 +6,36 @@ and why — so the reasoning survives even if the code around it changes.
 
 ---
 
+## 2026-07-26 — `INavigationService` abstraction over `Shell.Current` navigation
+
+**Context:** Issue #22 (sub-issue of #5) set out to cover `ProductListViewModel` with unit tests.
+Every command was reachable except `GoToDetailsCommand`, which called
+`Shell.Current.GoToAsync(...)` directly. `Shell.Current` is null outside a running MAUI app, so any
+test touching that command threw `NullReferenceException` — the one remaining hidden static
+dependency in a ViewModel layer that had otherwise already been abstracted behind
+`IProductService`/`ILocationService`/`IShareService`.
+
+**Decision:** Added `Services/INavigationService.cs` (`Task GoToAsync(string route)`) and
+`Services/ShellNavigationService.cs` (a one-line delegation to `Shell.Current.GoToAsync`),
+registered as a singleton in `MauiProgram.cs` and injected into `ProductListViewModel` alongside
+`IProductService`. The route string itself — built from `Routes.ProductDetail` plus the id query
+parameter — stays in the ViewModel; only the act of navigating moves behind the interface. Also
+promoted `ProductDetailViewModel.LoadProductAsync` from a private method to a `[RelayCommand]` in
+the same pass, so `ApplyQueryAttributes`' fire-and-forget load exposes an awaitable
+`ExecutionTask` instead of racing the assertions.
+
+**Why:** `docs/Enterprise-Application-Patterns-Using-.NET-MAUI.md` — the architectural reference
+this repo adopted on 2026-07-22 — prescribes exactly this abstraction, so the pre-change code was
+a deviation from the repo's own stated guide rather than a considered exception. Keeping the route
+*string* in the ViewModel means the test
+(`GoToDetailsAsync_WhenProductIsSelected_NavigatesToDetailRouteWithId`) pins the exact
+`"productdetail?id=7"` shape that `ProductDetailViewModel.ApplyQueryAttributes` parses, closing the
+contract between the two ViewModels — a fatter `NavigateToProductDetail(int id)` method would have
+hidden that. A full navigation service (back-stack, modal, parameter dictionaries) was ruled out as
+speculative for a two-screen app; the interface can grow if a third screen needs it.
+
+---
+
 ## 2026-07-26 — New xUnit + Moq test project, referencing the MAUI head project directly
 
 **Context:** Issue #4 ("Add to list" share feature) needed the share-string/fallback logic in
