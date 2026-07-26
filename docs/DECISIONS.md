@@ -6,6 +6,34 @@ and why — so the reasoning survives even if the code around it changes.
 
 ---
 
+## 2026-07-26 — AI usage disclosure as a standalone `docs/AI-USAGE.md`
+
+**Context:** The assessment requires candidates to share "any AI tools or help that were used to
+complete the assessments (Prompts, Instructions, Skills, Context files)". This project used Claude
+Code heavily and accumulated several instruction artifacts — `CLAUDE.md`, a `kanban-manager`
+subagent, a project-scoped `run-meijerproducts` skill with a PowerShell driver, and local settings
+— so there was real substance to disclose rather than a one-line acknowledgement. Issue #25.
+
+**Decision:** Wrote `docs/AI-USAGE.md` as a standalone document, linked from the README intro,
+covering: tools and models used (sourced from `Co-Authored-By` commit trailers rather than
+recollection), an inventory of every committed instruction artifact with line counts and what each
+one does, the prompting workflow (issues-before-code, one branch per issue, the mandatory
+ask-before-coding gate, the decision-log policy), an explicit AI-produced vs. human-directed split,
+how output was verified, and known limitations. Rejected the "friendly summary" register in favor
+of pointing every claim at a file path, commit, or issue number a reviewer can open.
+
+**Why:** A standalone doc rather than a README section because the disclosure is an assessment
+deliverable in its own right, and burying it in a build guide undersells it; `docs/` rather than
+the repo root because it belongs with the spec and the decision log, with the README carrying a
+prominent link. Two judgment calls worth recording: the empty 0-byte
+`.claude/skills/skill-builder/skill.md` is disclosed *as* an empty placeholder rather than
+described as a working tool or quietly omitted, and the "Known limitations" section names the
+agent's own failure during this work (a board-automation run that reported success while leaving
+three duplicate issues, #19–#21). Both cost nothing and a disclosure that only lists successes
+isn't credible.
+
+---
+
 ## 2026-07-26 — Publish the Compose API on 5217 to match the MAUI app's base address
 
 **Context:** Issue #24 (sub-issue of #5) surfaced a mismatch that made the containerized API
