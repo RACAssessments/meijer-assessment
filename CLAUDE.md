@@ -104,6 +104,13 @@ When the user asks to work on a specific GitHub issue, follow this sequence and 
 Only after confirmation should implementation begin. This applies every time, not just the first time —
 don't assume it's understood from a prior turn in the conversation.
 
+## GitHub access
+
+For kanban/project board interactions (moving issues, viewing org-specific data), use the classic token
+`GITHUB_TOKEN_CLASSIC` from `.env` — the default `gh` token cannot access the RACAssessments organization.
+Set `GITHUB_TOKEN` environment variable to this value before running `gh` commands that touch the project
+or org-specific resources.
+
 ## Decision log
 
 `docs/DECISIONS.md` tracks notable technical decisions (context, decision, why) for this
