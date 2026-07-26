@@ -35,6 +35,10 @@
 
                 <Label Text="{Binding Product.Description}"
                        FontSize="16" />
+
+                <Button Text="Add to list"
+                        Command="{Binding AddToListCommand}"
+                        Margin="0,8,0,0" />
             </VerticalStackLayout>
         </ScrollView>
     </Grid>
