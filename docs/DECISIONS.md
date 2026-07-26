@@ -6,6 +6,87 @@ and why — so the reasoning survives even if the code around it changes.
 
 ---
 
+## 2026-07-26 — New xUnit + Moq test project, referencing the MAUI head project directly
+
+**Context:** Issue #4 ("Add to list" share feature) needed the share-string/fallback logic in
+`ProductDetailViewModel` to be unit testable without a device, and no test project existed yet in
+the repo (`CLAUDE.md` calls out a standard `dotnet test`-compatible project as the intended path
+once tests are added). The obvious approach — a plain `net10.0` test project with a
+`ProjectReference` to `MeijerProducts.csproj` — risked friction because the head project is a MAUI
+`SingleProject` (`UseMaui=true`) multi-targeting `net10.0-android`/`net10.0-ios`/
+`net10.0-windows10.0.19041.0`, none of which is a TFM a plain xUnit project can target directly.
+
+**Decision:** Added `Assessment/MeijerProducts.Tests` (xUnit + Moq), targeting
+`net10.0-windows10.0.19041.0` specifically — an exact match against one of the head project's
+existing `TargetFrameworks` — with a plain `<ProjectReference Include="..\MeijerProducts\MeijerProducts.csproj">`.
+This alone pulled in the MAUI Resizetizer's build targets transitively and failed
+(`MSB3231`/duplicate `AppIcon` output), so the reference also sets
+`<ExcludeAssets>build;buildMultitargeting;buildTransitive</ExcludeAssets>` — this keeps the
+compile-time assembly reference (ViewModels, Models, service interfaces) while stripping the
+build-time MSBuild targets/props (icon/splash resizing, XAML source-gen hooks) that only make
+sense for the app head, not a test project. Verified with a placeholder fact before writing real
+tests, per the exploratory plan for this issue. Added to `Assessment.slnx`.
+
+**Why:** This keeps every existing file in place (no extraction of `Models`/ViewModels into a new
+shared class library, which was the documented fallback if this approach failed) and reuses the
+already-working Windows toolchain instead of standing up a second build target. The
+`ExcludeAssets` fix is narrow and only affects the test project's own build, not the app head's —
+lower risk than, say, disabling Resizetizer globally. Windows was chosen as the exact-match TFM
+(rather than Android) since it's the primary local dev/build target on this Windows environment
+per `CLAUDE.md`.
+
+---
+
+## 2026-07-26 — `ILocationService`/`IShareService` abstractions over Maui Essentials Geolocation/Share
+
+**Context:** Issue #4 needed the detail screen's "Add to list" action to resolve a city from the
+device's location and invoke the native share sheet. `Geolocation`, `Geocoding`, `Permissions`,
+and `Share` are static Maui Essentials entry points — calling them directly from
+`ProductDetailViewModel` would work, but isn't unit-testable without a device and breaks from the
+`IProductService` precedent already established for wrapping platform/network calls behind an
+interface (see the "MAUI app architecture: MVVM + DI" entry below).
+
+**Decision:** Added `Services/ILocationService` (`Task<string?> GetCurrentCityAsync(...)`, with a
+"never throws — returns null on any failure" contract) and `Services/IShareService`
+(`Task ShareTextAsync(string text, string? title = null)`), each with a thin implementation
+wrapping the static Maui Essentials APIs, registered as singletons in `MauiProgram.cs` alongside
+`IProductService`. `ProductDetailViewModel` takes both via constructor injection.
+
+**Why:** Matches the existing `IProductService` abstraction pattern exactly (same DI lifetime,
+same interface-first structure), keeps `ProductDetailViewModel` unit-testable with mocked
+services (see the "New xUnit + Moq test project" entry above), and centralizes the
+permission-request/exception-handling logic for location lookups in one place rather than
+scattering `try/catch` around Maui Essentials calls inside the ViewModel.
+
+---
+
+## 2026-07-26 — Location permission across Android, iOS, and Windows for the "Add to list" feature
+
+**Context:** Issue #4's share string requires a city derived from the device's current location,
+so the app needs location permission declared on every platform it targets
+(`net10.0-android`, `net10.0-ios`, `net10.0-windows10.0.19041.0`). None of the three platform
+manifests had any location permission/capability before this.
+
+**Decision:** Added `android.permission.ACCESS_COARSE_LOCATION` to
+`Platforms/Android/AndroidManifest.xml` (not `ACCESS_FINE_LOCATION` — only city-level
+`Placemark.Locality` is ever used, so coarse is the least-privilege choice, paired with
+`GeolocationAccuracy.Medium` in `LocationService`); `NSLocationWhenInUseUsageDescription` to
+`Platforms/iOS/Info.plist`; and `<DeviceCapability Name="location" />` to
+`Platforms/Windows/Package.appxmanifest`. All three request "when in use" access only, via
+`Permissions.RequestAsync<Permissions.LocationWhenInUse>()` at runtime.
+
+**Why:** Least-privilege across all three platforms — the feature never needs fine-grained
+coordinates, only a city name. The Windows manifest entry is added for correctness even though its
+runtime effect on this project's *unpackaged* build (`WindowsPackageType=None`) is uncertain —
+Windows location consent for an unpackaged desktop app is really governed by the OS-level
+Settings → Privacy → Location toggle rather than the AppX capability. If location access fails for
+any reason on any platform (permission denied, GPS unavailable, geocoding failure), the feature
+degrades gracefully rather than blocking: the share sheet still opens with a placeholder ("your
+area") substituted for the city — verified locally on Windows dev, where no location fix is
+available.
+
+---
+
 ## 2026-07-26 — Scope Android cleartext HTTP exception to the emulator host alias only
 
 **Context:** Deploying the MAUI app to the Android emulator to test against the backend API

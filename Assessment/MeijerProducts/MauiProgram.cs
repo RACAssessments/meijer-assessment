@@ -33,6 +33,8 @@ namespace MeijerProducts
                 return new HttpClient { BaseAddress = new Uri(baseAddress) };
             });
             builder.Services.AddSingleton<IProductService, ProductService>();
+            builder.Services.AddSingleton<ILocationService, LocationService>();
+            builder.Services.AddSingleton<IShareService, ShareService>();
 
             builder.Services.AddTransient<ProductListViewModel>();
             builder.Services.AddTransient<ProductListPage>();
