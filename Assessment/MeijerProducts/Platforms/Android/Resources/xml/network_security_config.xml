@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- 10.0.2.2 is the Android emulator's alias for the host machine's loopback -
+             the dev/Docker API is plain http:// there, which Android blocks by default
+             since API 28. Every other domain still falls back to the base config (HTTPS only). -->
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>

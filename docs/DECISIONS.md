@@ -6,6 +6,27 @@ and why — so the reasoning survives even if the code around it changes.
 
 ---
 
+## 2026-07-26 — Scope Android cleartext HTTP exception to the emulator host alias only
+
+**Context:** Deploying the MAUI app to the Android emulator to test against the backend API
+(reached via `http://10.0.2.2:<port>/`, the emulator's alias for the host machine's loopback)
+failed to connect. Android has blocked plaintext HTTP traffic by default since API 28, and the API
+only serves plain `http://` (no TLS cert set up for local dev) —
+`Platforms/Android/AndroidManifest.xml` had no cleartext exception configured, so the `HttpClient`
+call was being rejected before it reached the network.
+
+**Decision:** Add `Platforms/Android/Resources/xml/network_security_config.xml`, permitting
+cleartext traffic only for the `10.0.2.2` domain, and reference it from `AndroidManifest.xml` via
+`android:networkSecurityConfig="@xml/network_security_config"` — rather than a blanket
+`android:usesCleartextTraffic="true"` on the `<application>` element.
+
+**Why:** A scoped `network_security_config.xml` fixes the emulator-to-dev-API case while leaving
+the rest of the app's network security policy (HTTPS-only, cleartext blocked) intact for every other
+host — closer to what a real deployment would want, versus a blanket flag that would silently permit
+plaintext HTTP to *any* domain from the whole app.
+
+---
+
 ## 2026-07-22 — Drop MacCatalyst as a build target
 
 **Context:** The unmodified `dotnet new maui` template multi-targets `net10.0-android`,
