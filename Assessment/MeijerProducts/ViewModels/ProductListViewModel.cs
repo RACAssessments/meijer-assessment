@@ -10,6 +10,7 @@ namespace MeijerProducts.ViewModels;
 public partial class ProductListViewModel : ObservableObject
 {
     private readonly IProductService _productService;
+    private readonly INavigationService _navigationService;
 
     [ObservableProperty]
     public partial bool IsBusy { get; set; }
@@ -19,9 +20,10 @@ public partial class ProductListViewModel : ObservableObject
 
     public ObservableCollection<ProductSummary> Products { get; } = [];
 
-    public ProductListViewModel(IProductService productService)
+    public ProductListViewModel(IProductService productService, INavigationService navigationService)
     {
         _productService = productService;
+        _navigationService = navigationService;
     }
 
     [RelayCommand]
@@ -63,6 +65,6 @@ public partial class ProductListViewModel : ObservableObject
             return;
         }
 
-        await Shell.Current.GoToAsync($"{Routes.ProductDetail}?id={product.Id}");
+        await _navigationService.GoToAsync($"{Routes.ProductDetail}?id={product.Id}");
     }
 }

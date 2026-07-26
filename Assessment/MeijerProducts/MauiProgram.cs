@@ -35,6 +35,7 @@ namespace MeijerProducts
             builder.Services.AddSingleton<IProductService, ProductService>();
             builder.Services.AddSingleton<ILocationService, LocationService>();
             builder.Services.AddSingleton<IShareService, ShareService>();
+            builder.Services.AddSingleton<INavigationService, ShellNavigationService>();
 
             builder.Services.AddTransient<ProductListViewModel>();
             builder.Services.AddTransient<ProductListPage>();

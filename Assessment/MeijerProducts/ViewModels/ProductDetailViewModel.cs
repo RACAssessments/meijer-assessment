@@ -39,10 +39,13 @@ public partial class ProductDetailViewModel : ObservableObject, IQueryAttributab
     {
         if (query.TryGetValue("id", out var value) && int.TryParse(value?.ToString(), out var id))
         {
-            _ = LoadProductAsync(id);
+            // Fire-and-forget: ApplyQueryAttributes is void, so the load can't be awaited here.
+            // Exposed as a command so tests (and a future retry button) can await it.
+            _ = LoadProductCommand.ExecuteAsync(id);
         }
     }
 
+    [RelayCommand]
     private async Task LoadProductAsync(int id)
     {
         try
