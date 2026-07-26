@@ -57,3 +57,6 @@ if (!EF.IsDesignTime)
 app.MapProductEndpoints();
 
 app.Run();
+
+// Exposes the top-level-statement Program class to WebApplicationFactory<Program> in tests.
+public partial class Program;

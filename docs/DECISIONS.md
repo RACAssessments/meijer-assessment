@@ -6,6 +6,43 @@ and why — so the reasoning survives even if the code around it changes.
 
 ---
 
+## 2026-07-26 — New `MeijerProducts.Api.Tests` project, `Mvc.Testing` against a per-run temp SQLite file
+
+**Context:** Issue #23 (sub-issue of #5) asks for endpoint/integration coverage of
+`MeijerProducts.Api` — the two product endpoints, the DTO mapping, `DbInitializer.Seed`, and
+Swagger — with no existing test project for the API side. `Program.cs` uses top-level statements,
+which `WebApplicationFactory<T>` can't target directly without an accessible partial `Program`
+type. The app's startup path also runs `db.Database.Migrate()` + `DbInitializer.Seed(db)`
+unconditionally against whatever connection string it resolves, which is an opportunity to get a
+deterministic seeded dataset for free rather than hand-rolling test fixtures.
+
+**Decision:** Added `Assessment/MeijerProducts.Api.Tests` (net10.0, xUnit +
+`Microsoft.AspNetCore.Mvc.Testing` 10.0.10, `ProjectReference` to `MeijerProducts.Api.csproj`),
+added to `Assessment.slnx`. Appended `public partial class Program;` to the bottom of
+`Program.cs` so the top-level-statement `Program` class is reachable as a generic argument.
+Added `ApiFactory : WebApplicationFactory<Program>`, shared across all test classes via an xUnit
+`ICollectionFixture`, which overrides `ConnectionStrings:Default` to a per-run temp file path
+(`Path.GetTempPath()/meijer-products-tests-{guid}.db`) — the existing startup `Migrate()` + `Seed()`
+then populates the same deterministic 30-product dataset once per test run, with no test-side
+fixture/seeding code. `ApiFactory.Dispose` calls `SqliteConnection.ClearAllPools()` before deleting
+the temp file, since SQLite's connection pool otherwise keeps a native handle open past the point
+`WebApplicationFactory` disposes the host, which fails the file delete on Windows.
+`DbInitializerTests` (which exercises `Seed` directly, not through the host) uses its own
+open in-memory `SqliteConnection` per test instead of the shared `ApiFactory`, since it's testing
+the seeding function's own idempotency/shape, not the HTTP surface.
+
+**Why:** Rejected `Microsoft.EntityFrameworkCore.InMemory` for the endpoint tests — it doesn't
+enforce the same constraints as the real SQLite provider (e.g. `ValueGeneratedNever()` and
+required-column behavior differ), so a pass there wouldn't prove the real provider's `Migrate()`
+path works, and Sqlite is already a project dependency with no new package family to reason about.
+A real per-run SQLite *file* (vs. a single shared in-memory connection) also matches how the app
+actually boots — through `Migrate()` against a `Data Source=` connection string — rather than
+short-circuiting it. Sharing one `ApiFactory` per test run (collection fixture) instead of one per
+test class avoids re-running migrations for every class while still keeping the dataset
+consistent across the list/detail/swagger test files that all read the same seeded rows.
+
+---
+
 ## 2026-07-26 — `INavigationService` abstraction over `Shell.Current` navigation
 
 **Context:** Issue #22 (sub-issue of #5) set out to cover `ProductListViewModel` with unit tests.
