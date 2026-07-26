@@ -177,6 +177,15 @@ The reasoning behind these choices (and the alternatives ruled out) is logged in
   point at Meijer's CDN, which returns HTTP 403 to non-browser clients. The data, layout, and image
   bindings are correct; the remote fetch is what fails.
 
+- **"Add to list" may say "your area" instead of a city.** The share text falls back to
+  `"... from your area added to list"`, along with an on-screen note, whenever a city can't be
+  resolved. On a desktop with no GPS this is common even with location permission granted and the
+  Windows location service running: the OS simply never acquires a position fix
+  (`Geolocator.LocationStatus` stays `NotInitialized`), so reverse geocoding has nothing to work
+  from. This is the designed fallback behaving correctly, not a failure — but it does mean the
+  assessment's example output (`"Bananas - $0.59/lb from Chicago added to list"`) is best
+  reproduced on a device with real location hardware.
+
 ## Project management
 
 Issues and the Kanban board are managed via `gh`/GitHub's GraphQL API, using tokens in a local
