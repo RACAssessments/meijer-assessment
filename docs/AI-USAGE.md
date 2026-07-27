@@ -32,11 +32,13 @@ At the time of writing that showed Claude Sonnet 5, Claude Haiku 4.5, and Claude
 
 ---
 
-## 2. Instruction and context files in this repository
+## 2. Instruction and context files
 
-These are the files that shape how the agent behaves. All are committed and readable.
+These are the files that shape how the agent behaves. Everything listed below is committed and
+readable in this repository, except the two items called out under "Not committed" — noted there
+rather than silently omitted.
 
-### [`CLAUDE.md`](../CLAUDE.md) (repo root, ~120 lines)
+### [`CLAUDE.md`](../CLAUDE.md) (repo root, ~152 lines)
 
 The main context file, loaded automatically by Claude Code at the start of every session. It
 contains the repository state, the assignment summary, build/test/run commands, architecture
@@ -51,33 +53,47 @@ adding board items, and setting Status fields.
 ### [`Assessment/MeijerProducts/.claude/skills/run-meijerproducts/`](../Assessment/MeijerProducts/.claude/skills/run-meijerproducts/SKILL.md)
 
 A project-scoped skill: [`SKILL.md`](../Assessment/MeijerProducts/.claude/skills/run-meijerproducts/SKILL.md)
-(~120 lines) plus [`driver.ps1`](../Assessment/MeijerProducts/.claude/skills/run-meijerproducts/driver.ps1)
+(~156 lines) plus [`driver.ps1`](../Assessment/MeijerProducts/.claude/skills/run-meijerproducts/driver.ps1)
 (~155 lines of PowerShell). It builds and launches the MAUI Windows head and drives it through UI
 Automation — launch, screenshot, click a button by name, read button text, stop. This is what let
 the app be verified *visually* rather than only compiled.
 
-Its "Gotchas" section is worth a look, because it records real failures hit while building it:
-window-chrome buttons shadowing the app's own buttons in UI Automation's document order; DPI
-mismatch between `GetWindowRect` and `CopyFromScreen` producing misaligned screenshot crops;
+Its "Gotchas" section is worth a look, because it records real failures hit while building and
+using it: window-chrome buttons shadowing the app's own buttons in UI Automation's document order;
+DPI mismatch between `GetWindowRect` and `CopyFromScreen` producing misaligned screenshot crops;
 non-ASCII characters breaking the PowerShell parser with errors reported far from the actual cause;
-and the limitation that `click` cannot open the product detail screen, because list rows are a
-`TapGestureRecognizer` on a `Grid` and expose no `InvokePattern`.
+`click` being unable to open the product detail screen, because list rows are a
+`TapGestureRecognizer` on a `Grid` and expose no `InvokePattern`; and — added after the end-to-end
+pass — that `CollectionView.EmptyView` text is invisible to UI Automation, which made a correctly
+rendered error state look like a missing one until a screenshot proved otherwise.
 
-### [`.claude/settings.local.json`](../.claude/settings.local.json)
+### [`Assessment/MeijerProducts/.claude/skills/android-deploy/`](../Assessment/MeijerProducts/.claude/skills/android-deploy/SKILL.md)
 
-Local Claude Code configuration — a permission allowlist for a handful of read-only `gh`/`docker`
-commands plus a scratch directory. Configuration only; no project logic.
+A second project-scoped skill (~81 lines): builds the `net10.0-android` target and deploys it to an
+attached device or emulator, including how to pick a target when several are attached
+(`-p:AdbTarget="-s <serial>"`, an MSBuild property consumed by the Android SDK's build targets) and
+how to confirm the install actually launched rather than trusting silent build output. Its gotchas
+note that an unauthorized USB device is *absent* from `adb devices` entirely rather than listed as
+`unauthorized`, and that two attached devices with no selector is an error rather than a default.
 
 ### `.claude/skills/skill-builder/skill.md`
 
 **Empty (0 bytes).** A placeholder directory that was created but never filled in. Listed here only
-for completeness — it has no content and had no effect on any output.
+for completeness — it has no content and had no effect on any output. Tracked for removal in
+[#31](https://github.com/RACAssessments/meijer-assessment/issues/31).
 
 ### Not committed
 
-The repository root has a `.env` file holding three GitHub personal access tokens, used by the
-agent for issue and project-board operations. It is gitignored (`.gitignore` line 20) and is **not**
-part of this repository. No credentials are committed.
+Two things the agent used are deliberately or incidentally absent from this repository:
+
+- **`.env`** (repo root) — holds three GitHub personal access tokens used for issue and
+  project-board operations. Gitignored via the repo's own `.gitignore`. No credentials are
+  committed.
+- **`.claude/settings.local.json`** — local Claude Code configuration: a permission allowlist for
+  some read-only `gh`/`docker` commands plus a scratch directory. It exists on the development
+  machine but is **not tracked**, because it is excluded by a *global* gitignore rule
+  (`**/.claude/settings.local.json`) rather than anything in this repository. Configuration only,
+  no project logic — but flagged here so the inventory isn't read as more complete than it is.
 
 ---
 
