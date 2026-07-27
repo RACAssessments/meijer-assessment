@@ -30,5 +30,17 @@
 	<string>Assets.xcassets/appicon.appiconset</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>MeijerProducts uses your location to include your city when you share a product to your list.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<!-- Production API on Azure Container Instances (issue #34) has no TLS termination. -->
+			<key>meijerproducts-api.southcentralus.azurecontainer.io</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
 </dict>
 </plist>

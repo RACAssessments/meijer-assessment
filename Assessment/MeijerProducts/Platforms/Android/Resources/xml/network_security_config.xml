@@ -5,5 +5,8 @@
              the dev/Docker API is plain http:// there, which Android blocks by default
              since API 28. Every other domain still falls back to the base config (HTTPS only). -->
         <domain includeSubdomains="false">10.0.2.2</domain>
+        <!-- Production API on Azure Container Instances (issue #34) has no TLS termination,
+             so it needs the same cleartext exception, scoped to just this host. -->
+        <domain includeSubdomains="false">meijerproducts-api.southcentralus.azurecontainer.io</domain>
     </domain-config>
 </network-security-config>
