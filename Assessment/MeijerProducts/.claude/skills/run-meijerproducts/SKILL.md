@@ -121,9 +121,27 @@ Essentials statics), so the share flow is verified by launching the app and driv
 - **`click` cannot navigate from the product list to the detail screen.** List rows are a
   `TapGestureRecognizer` on a `Grid` inside the `CollectionView.ItemTemplate` (see
   `Views/ProductListPage.xaml`), not `Button`s — they expose no `InvokePattern`, so `Find-AppButton`
-  will never match them. Click a row by hand, then resume driving. Scripting it would need a new
-  driver command that resolves an element's `GetClickablePoint()` and synthesizes a real mouse
-  click; that hasn't been built.
+  will never match them. Click a row by hand, then resume driving. Scripting it needs a synthesized
+  mouse click; if you build that, note the next two bullets, both hit during the #26 verification
+  pass.
+- **`GetClickablePoint()` throws for this app's `Label` elements**, even with the window
+  foregrounded and the element plainly visible. Fall back to the centre of
+  `element.Current.BoundingRectangle`, which works. Raising the window first is still necessary —
+  the point is in screen coordinates, and a synthesized click lands on whatever is topmost.
+- **UI Automation does not expose `CollectionView.EmptyView` text.** Enumerating descendants of the
+  app window returns the page title and nothing else when the list is empty, even while the error
+  message is plainly rendered on screen. Verify empty/error states with `screenshot`, not by
+  dumping the automation tree — the tree will make a working error state look like a broken one.
+- **The Windows share flyout is invisible to `screenshot`.** It renders in a separate process
+  (an unnamed `ApplicationFrameWindow`), so `CopyFromScreen` captures a blank white panel where the
+  sheet is, and the flyout's contents aren't reachable from the app window's automation tree
+  either. To confirm a share fired, check the app's own state instead — e.g. whether the location
+  fallback message appeared.
+- **Running `driver.ps1` from a bash shell hits the PowerShell execution policy**
+  (`UnauthorizedAccess`, "running scripts is disabled"). Invoke it from a PowerShell context, or
+  pass `-ExecutionPolicy Bypass`. This fails *loudly* for the driver but can fail *silently* in a
+  polling loop that only greps stdout for an expected string — a wasted 2-minute poll that reported
+  a false negative during #26.
 
 ## Troubleshooting
 
