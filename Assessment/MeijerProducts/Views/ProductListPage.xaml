@@ -7,8 +7,17 @@
              x:DataType="vm:ProductListViewModel"
              Title="Products">
 
-    <Grid>
-        <RefreshView IsRefreshing="{Binding IsBusy}"
+    <Grid RowDefinitions="Auto,*">
+        <Image Grid.Row="0"
+               Source="meijerlogo_primary_fullcolor.png"
+               Aspect="AspectFit"
+               HeightRequest="40"
+               Margin="0,12"
+               HorizontalOptions="Center"
+               SemanticProperties.Description="Meijer logo" />
+
+        <RefreshView Grid.Row="1"
+                     IsRefreshing="{Binding IsBusy}"
                      Command="{Binding LoadProductsCommand}">
             <CollectionView ItemsSource="{Binding Products}"
                              SelectionMode="None">
