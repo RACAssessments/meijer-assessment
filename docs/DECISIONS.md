@@ -6,6 +6,37 @@ and why — so the reasoning survives even if the code around it changes.
 
 ---
 
+## 2026-07-27 — Deploy the API to Azure Container Instances with ephemeral SQLite storage
+
+**Context:** Issue #34 asks for the already-containerized API (previous entry) to run in the
+user's own Azure subscription via Azure Container Instances (ACI), pulling from Azure Container
+Registry (ACR, `acrmeijer.azurecr.io` in resource group `rg-meijer-assessment`). Unlike the local
+Compose setup, ACI has no equivalent of a named volume without provisioning an Azure Files share
+and share/mount config.
+
+**Decision:** Push the existing image to ACR unchanged and create the container group with
+`ConnectionStrings__Default=Data Source=/app/products.db` (the app's own `WORKDIR`, not the
+Compose-only `/app/data` subdirectory, which doesn't exist inside the image without a mounted
+volume — pointing SQLite there caused the container to crash-loop with `SQLite Error 14: unable to
+open database file`). No Azure Files share is provisioned; the container's writable layer holds the
+SQLite file for the life of the container instance, and the app's existing idempotent
+migrate-and-seed-on-startup logic simply re-populates the 30-product dataset from scratch on any
+restart or redeploy. Same `ASPNETCORE_ENVIRONMENT=Development` as Compose, to keep Swagger
+reachable. Registry auth uses the ACR admin username/password (fetched via `az acr credential
+show` after enabling the admin user, which was off by default) rather than a managed identity —
+simpler for a single-container demo deployment, at the cost of a static reusable credential stored
+in `.env` (already gitignored alongside the GitHub tokens).
+
+**Why:** For a take-home assessment deployment, losing seeded data on restart is a non-issue since
+re-seeding is instant and deterministic — provisioning a storage account + file share purely to
+preserve data nobody depends on between restarts would be effort spent on the wrong thing. Using
+the app's real `WORKDIR` instead of inventing a new path keeps the image itself unchanged between
+Compose and ACI; only the Compose-specific volume convention doesn't carry over, which is exactly
+the kind of environment-specific detail the previous entry's Dockerfile/Compose split was designed
+to keep out of the image.
+
+---
+
 ## 2026-07-26 — AI usage disclosure as a standalone `docs/AI-USAGE.md`
 
 **Context:** The assessment requires candidates to share "any AI tools or help that were used to
