@@ -118,10 +118,15 @@ docker compose up --build
 - Products: http://localhost:5217/products
 - Swagger: http://localhost:5217/swagger
 
-Compose publishes the container's port 8080 on **5217** deliberately: that's the address the MAUI
-app hardcodes (and the API's `dotnet run` port), so containerized and locally-run APIs are
-interchangeable without rebuilding the app. If you change one, change the other —
+Compose publishes the container's port 8080 on **5217** deliberately: that's the address **Debug**
+builds of the MAUI app hardcode (and the API's `dotnet run` port), so containerized and locally-run
+APIs are interchangeable without rebuilding the app. If you change one, change the other —
 `Assessment/MeijerProducts/MauiProgram.cs` is the client side.
+
+**Release** builds instead point at the API deployed to Azure Container Instances (issue #34) —
+see `docs/azure-deploy.md` for how that's deployed/redeployed, and the 2026-07-27 "Point Release
+builds at the ACI production API" entry in `docs/DECISIONS.md` for why the split is a compiler
+symbol rather than a settings file.
 
 Seeded SQLite data lives on a named volume, so it survives `docker compose restart`. Stop with
 `docker compose down` (add `-v` to also wipe the volume and reset seeded data).

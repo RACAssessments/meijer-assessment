@@ -7,6 +7,9 @@ namespace MeijerProducts
 {
     public static class MauiProgram
     {
+        private const string ProductionApiBaseAddress =
+            "http://meijerproducts-api.southcentralus.azurecontainer.io:8080/";
+
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
@@ -24,11 +27,15 @@ namespace MeijerProducts
 
             builder.Services.AddSingleton(_ =>
             {
+#if DEBUG
                 // Android emulators route "localhost" to the emulator itself, not the host
                 // machine running the API, so the loopback address needs to be host-mapped.
                 var baseAddress = DeviceInfo.Platform == DevicePlatform.Android
                     ? "http://10.0.2.2:5217/"
                     : "http://localhost:5217/";
+#else
+                var baseAddress = ProductionApiBaseAddress;
+#endif
 
                 return new HttpClient { BaseAddress = new Uri(baseAddress) };
             });

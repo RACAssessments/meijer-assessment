@@ -6,6 +6,37 @@ and why — so the reasoning survives even if the code around it changes.
 
 ---
 
+## 2026-07-27 — Point Release builds at the ACI production API
+
+**Context:** Issue #35 picks up the configurable-base-address work the 2026-07-26 "Publish the
+Compose API on 5217..." entry deliberately deferred as out of proportion at the time — naming
+`a MauiAsset settings JSON or an MSBuild constant` as the two mechanisms for a real fix. Issue #34
+has since deployed the API to Azure Container Instances (`http://meijerproducts-api.southcentralus
+.azurecontainer.io:8080/`), so the app now has two real environments to point at instead of one.
+
+**Decision:** `MauiProgram.cs`'s single `HttpClient` base-address selection wraps its existing
+Android-emulator-vs-loopback ternary in `#if DEBUG`/`#else`, adding a `const` production URL for
+the `#else` branch — reusing the `DEBUG` symbol the MAUI template already defines and already uses
+one line above (for `AddDebug()` logging) rather than introducing a new MSBuild property or a
+settings-file layer. Both Android's `network_security_config.xml` and iOS's `Info.plist` gained a
+second cleartext/ATS exception scoped to the production FQDN specifically, alongside the existing
+`10.0.2.2` emulator exception — the ACI endpoint has no TLS termination, so it hits the same
+HTTPS-only default block the emulator loopback did before the earlier entry scoped an exception
+for it.
+
+**Why:** Of the two mechanisms the deferred entry named, the compiler-symbol split is strictly
+smaller — no new csproj properties, no new file, and it reuses a distinction (`DEBUG`) the project
+already draws for exactly this "local dev vs. everything else" purpose. A settings-JSON/`MauiAsset`
+approach would only pay for itself if there were more than two environments or values, neither of
+which is true here. Scoping the network exceptions per-host (rather than a blanket
+`cleartextTrafficPermitted`/`NSAllowsArbitraryLoads`) keeps the same least-privilege posture the
+2026-07-26 "Scope Android cleartext HTTP exception to the emulator host alias only" entry
+established, just extended to the one additional real host that now exists. The iOS change is
+unverified — iOS builds aren't runnable from this Windows dev environment — but is included for
+parity since `net10.0-ios` is still a supported target.
+
+---
+
 ## 2026-07-27 — Deploy the API to Azure Container Instances with ephemeral SQLite storage
 
 **Context:** Issue #34 asks for the already-containerized API (previous entry) to run in the
