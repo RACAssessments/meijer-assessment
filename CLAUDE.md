@@ -127,7 +127,7 @@ When the user asks to work on a specific GitHub issue, follow this sequence and 
 1. Look up the issue (`gh issue view <N> --repo RACAssessments/meijer-assessment`) to see the actual
    scope before doing anything else.
 2. Move the issue's card on the project board (https://github.com/users/blanthor/projects/7) to
-   **"In progress"** — use the `kanban-manager` agent or its recipes directly.
+   **"In progress"** — use the `github-tracker` agent (from the `maui-factory` plugin).
 3. Create a new branch off `master` for the issue (e.g. `git checkout -b <N>-short-slug`) — do this
    even if there are uncommitted changes sitting on `master`; they carry over onto the new branch.
 4. Ask the user for explicit confirmation before writing any code ("Ready to start coding on this?" or
@@ -138,10 +138,18 @@ don't assume it's understood from a prior turn in the conversation.
 
 ## GitHub access
 
-For kanban/project board interactions (moving issues, viewing org-specific data), use the classic token
-`GITHUB_TOKEN_CLASSIC` from `.env` — the default `gh` token cannot access the RACAssessments organization.
-Set `GITHUB_TOKEN` environment variable to this value before running `gh` commands that touch the project
-or org-specific resources.
+Board and issue work goes through the **`github-tracker` agent** from the `maui-factory` plugin. It
+reads this project's coordinates — repo, board owner/number, and the GraphQL node IDs for the
+Status/Priority/Size fields — from `.claude/tracker.json`, and re-derives them if they ever go stale.
+Don't hand-roll board mutations, and don't copy node IDs anywhere else.
+
+For direct `gh` calls, use the classic token `GITHUB_TOKEN_CLASSIC` from `.env` — the default `gh`
+token is a fine-grained PAT and cannot access the RACAssessments organization. Set `GH_TOKEN` to this
+value before running commands that touch the project or org-specific resources. **Never print a token
+value or read `.env` into the conversation** — pipe it straight into the environment variable.
+
+`gh project` subcommands do not work against this board (`unknown owner type` / `resource not found`)
+— that's a client-side bug in the CLI wrapper, not permissions. Always use `gh api graphql` directly.
 
 ## Decision log
 
