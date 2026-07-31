@@ -1,0 +1,45 @@
+{
+  "tracker": "github",
+  "repo": "RACAssessments/meijer-assessment",
+  "defaultBranch": "master",
+  "project": {
+    "owner": "blanthor",
+    "ownerType": "user",
+    "number": 7,
+    "nodeId": "PVT_kwHOAEP0Ss4BeLqg"
+  },
+  "fields": {
+    "Status": {
+      "id": "PVTSSF_lAHOAEP0Ss4BeLqgzhYnyoE",
+      "options": {
+        "Backlog": "f75ad846",
+        "Ready": "08afe404",
+        "In progress": "47fc9ee4",
+        "In review": "4cc61d42",
+        "Done": "98236657"
+      }
+    },
+    "Priority": {
+      "id": "PVTSSF_lAHOAEP0Ss4BeLqgzhYnzpc",
+      "options": {
+        "P0": "79628723",
+        "P1": "0a877460",
+        "P2": "da944a9c"
+      }
+    },
+    "Size": {
+      "id": "PVTSSF_lAHOAEP0Ss4BeLqgzhYnzpg",
+      "options": {
+        "XS": "eff732af",
+        "S": "9592a5a3",
+        "M": "9728cbdc",
+        "L": "c53df028",
+        "XL": "7b141a16"
+      }
+    }
+  },
+  "tokens": {
+    "repo": "GITHUB_TOKEN_ORG",
+    "project": "GITHUB_TOKEN_CLASSIC"
+  }
+}
