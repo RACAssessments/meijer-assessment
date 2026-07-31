@@ -1,8 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="456" height="456" viewBox="0 0 456 456" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-    <path d="m 105.50037,281.60863 c -2.70293,0 -5.00091,-0.90042 -6.893127,-2.70209 -1.892214,-1.84778 -2.837901,-4.04181 -2.837901,-6.58209 0,-2.58722 0.945687,-4.80389 2.837901,-6.65167 1.892217,-1.84778 4.190197,-2.77167 6.893127,-2.77167 2.74819,0 5.06798,0.92389 6.96019,2.77167 1.93749,1.84778 2.90581,4.06445 2.90581,6.65167 0,2.54028 -0.96832,4.73431 -2.90581,6.58209 -1.89221,1.80167 -4.212,2.70209 -6.96019,2.70209 z" style="fill:#ffffff;fill-rule:nonzero;stroke-width:0.838376" />
-    <path d="M 213.56111,280.08446 H 195.99044 L 149.69953,207.0544 c -1.17121,-1.84778 -2.14037,-3.76515 -2.90581,-5.75126 h -0.40578 c 0.36051,2.12528 0.54076,6.67515 0.54076,13.6496 v 65.13172 h -15.54349 v -99.36009 h 18.71925 l 44.7374,71.29798 c 1.89222,2.95695 3.1087,4.98917 3.64945,6.09751 h 0.26996 c -0.45021,-2.6325 -0.67573,-7.09015 -0.67573,-13.37293 v -64.02256 h 15.47557 z" style="fill:#ffffff;fill-rule:nonzero;stroke-width:0.838376" />
-    <path d="m 289.25134,280.08446 h -54.40052 v -99.36009 h 52.23835 v 13.99669 h -36.15411 v 28.13085 h 33.31621 v 13.9271 h -33.31621 v 29.37835 h 38.31628 z" style="fill:#ffffff;fill-rule:nonzero;stroke-width:0.838376" />
-    <path d="M 366.56466,194.72106 H 338.7222 v 85.3634 h -16.08423 v -85.3634 h -27.77455 v -13.99669 h 71.70124 z" style="fill:#ffffff;fill-rule:nonzero;stroke-width:0.838376" />
+<svg width="456" height="456" viewBox="0 0 456 456" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <!--
+        App icon foreground: the "m" from the Meijer wordmark, knocked out in white.
+        Background is the flat red in appicon.svg plus MauiIcon's Color (#DD1321).
+
+        Why a monogram and not the full wordmark: the wordmark is 2.5:1, and Android adaptive icons
+        only guarantee the centre 72dp of a 108dp canvas is visible (launchers crop the rest to a
+        circle, squircle or rounded square). Fitting the whole wordmark inside that leaves it about
+        13dp tall on a normal launcher, which is unreadable. The "m" is the first subpath of the
+        logo's red path, isolated here so the remaining letters cannot bleed into the canvas.
+
+        Geometry: the glyph is 28.195 x 23.377 in logo units, scaled 7.803x to 220 x 182 and centred
+        on 228,228. Its corners sit 143px from centre, inside the ~150px circular safe radius.
+
+        NOTE: XML comments cannot contain a double hyphen, or the SVG fails to parse and the build
+        dies with MAUIR0004 from SKSvg.Load.
+    -->
+    <g transform="translate(118.0, 61.61) scale(7.803)" fill-rule="nonzero">
+        <path d="M0,10.0433578 L6.05915112,10.0433578 L6.05915112,13.2223203 C7.14583027,10.8319845 8.99708634,9.63636364 11.6108022,9.63636364 C14.3303733,9.63636364 15.9774801,10.8319845 16.5512152,13.2223203 C17.5913181,10.8319845 19.467677,9.63636364 22.1778723,9.63636364 C23.6909966,9.63636364 24.8986532,9.90779371 25.7947929,10.4533712 C26.6906303,10.9983448 27.3139661,11.7440982 27.6669176,12.6894237 C28.0183568,13.635051 28.1952862,15.4161034 28.1952862,18.0343923 L28.1952862,33.013468 L21.7865105,33.013468 L21.7865105,18.6880586 C21.7865105,16.9779586 21.6619037,15.8659708 21.4139001,15.3511896 C21.166804,14.8358046 20.6175668,14.5779611 19.7646763,14.5779611 C18.7415102,14.5779611 18.0740177,14.9155126 17.7655255,15.5891061 C17.455521,16.2639072 17.3021822,17.6219634 17.3021822,19.6647842 L17.3021822,33.013468 L10.8937089,33.013468 L10.8937089,18.48275 C10.8937089,16.848433 10.7754535,15.7898858 10.5434795,15.305901 C10.3102956,14.8216141 9.78071718,14.5779611 8.95413937,14.5779611 C7.93157824,14.5779611 7.25138302,14.9315146 6.91446107,15.6349986 C6.57663179,16.3387845 6.40756593,17.6823483 6.40756593,19.6647842 L6.40756593,33.013468 L0,33.013468 L0,10.0433578 Z" fill="#FFFFFF" />
+    </g>
 </svg>
