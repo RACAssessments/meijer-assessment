@@ -76,12 +76,6 @@ how to confirm the install actually launched rather than trusting silent build o
 note that an unauthorized USB device is *absent* from `adb devices` entirely rather than listed as
 `unauthorized`, and that two attached devices with no selector is an error rather than a default.
 
-### `.claude/skills/skill-builder/skill.md`
-
-**Empty (0 bytes).** A placeholder directory that was created but never filled in. Listed here only
-for completeness — it has no content and had no effect on any output. Tracked for removal in
-[#31](https://github.com/RACAssessments/meijer-assessment/issues/31).
-
 ### Not committed
 
 Two things the agent used are deliberately or incidentally absent from this repository:
